@@ -7,13 +7,24 @@ const spinning = ref(false);
 
 async function onRefresh() {
   spinning.value = true;
-  await refresh();
+  await Promise.all([refresh(), delay(100)]);
   spinning.value = false;
+}
+
+// Extra delay to make the spinning effect more visible
+// Some examples barely/don't change, so the spinning is the only visible effect
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 </script>
 
 <template>
-  <button class="refresh" @click="onRefresh">
+  <button
+    class="refresh"
+    title="Refresh Examples"
+    :disabled="spinning"
+    @click="onRefresh"
+  >
     <div :class="{ spinning: spinning }">⟳</div>
   </button>
 </template>
