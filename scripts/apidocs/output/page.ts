@@ -212,14 +212,20 @@ async function toRefreshFunction(method: RawApiDocsMethod): Promise<string> {
   const signatureData = required(signatures.at(-1), 'method signature');
   const { examples } = signatureData;
 
-  const exampleLines = examples
-    .join('\n')
+  const exampleCode = examples.join('\n');
+  if (!/^\w*faker\w*\./im.test(exampleCode)) {
+    // No recordable faker calls in examples
+    return 'undefined';
+  }
+
+  const exampleLines = exampleCode
     .replaceAll(/ ?\/\/.*$/gm, '') // Remove comments
     .replaceAll(/^import .*$/gm, '') // Remove imports
     .replaceAll(
+      // record results of faker calls
       /^(\w*faker\w*\..+(?:(?:.|\n..)*\n[^ ])?\));?$/gim,
       `try { result.push($1); } catch (error: unknown) { result.push(error instanceof Error ? error.name : 'Error'); }\n`
-    ); // collect results of faker calls
+    );
 
   const fullMethod = `async (): Promise<unknown[]> => {
 await enableFaker();
