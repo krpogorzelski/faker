@@ -95,13 +95,7 @@ async function onRefresh() {
     for (let i = 0; i < results.length; i++) {
       const result = results[i];
       const domLine = codeLines[i];
-      const resultLines =
-        result === undefined
-          ? ['undefined']
-          : JSON.stringify(result)
-              .replaceAll(/\\r/g, '')
-              .replaceAll(/</g, '&lt;')
-              .split('\\n');
+      const resultLines = stringify(result).split('\\n');
 
       if (resultLines.length === 1) {
         domLine.insertAdjacentHTML('beforeend', newCommentSpan(resultLines[0]));
@@ -112,6 +106,21 @@ async function onRefresh() {
       }
     }
   }
+}
+
+function stringify(result: unknown): string {
+  return result === undefined
+    ? 'undefined'
+    : JSON.stringify(result, null, 1)
+        .replaceAll('\\r', '')
+        .replaceAll('<', '&lt;')
+        .replaceAll(
+          // Change quotes if possible
+          /^( *)"([^'\n]*)"(,?)$/gm,
+          (_, pre, main, post) =>
+            `${pre}'${main.replaceAll('\\"', '"')}'${post}`
+        )
+        .replaceAll(/\n */g, ' ');
 }
 
 function newCommentLine(content: string): string {
